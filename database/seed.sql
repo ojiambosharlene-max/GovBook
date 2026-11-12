@@ -5586,9 +5586,20 @@ INSERT INTO appointments (id, reference, citizen_id, office_id, service_id, slot
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Today's queue: for each office the earliest confirmed bookings of today are already served / being served.
-CREATE TEMPORARY TABLE tmp_today AS
-  SELECT id, ROW_NUMBER() OVER (PARTITION BY office_id ORDER BY appointment_time, id) AS rn
-  FROM appointments WHERE appointment_date = CURDATE() AND status = 'Confirmed';
+CREATE TEMPORARY TABLE tmp_today (
+    id INT,
+    rn BIGINT
+);
+
+INSERT INTO tmp_today (id, rn)
+SELECT id,
+       ROW_NUMBER() OVER (
+           PARTITION BY office_id
+           ORDER BY appointment_time, id
+       )
+FROM appointments
+WHERE appointment_date = CURDATE()
+AND status = 'Confirmed';
 UPDATE appointments a JOIN tmp_today t ON t.id = a.id
   SET a.status = CASE WHEN t.rn <= 3 THEN 'Completed' WHEN t.rn = 4 THEN 'In Progress' WHEN t.rn <= 6 THEN 'Checked In' ELSE 'Confirmed' END;
 DROP TEMPORARY TABLE tmp_today;
