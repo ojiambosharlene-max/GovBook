@@ -176,7 +176,7 @@ router.get('/schedules', requirePermission('schedules.manage'), async (req, res)
             TIME_FORMAT(s.open_time, '%H:%i') AS open_time, TIME_FORMAT(s.close_time, '%H:%i') AS close_time, s.slot_minutes, s.slot_capacity, s.is_closed, s.closed_reason,
             COUNT(t.id) AS slot_count, COALESCE(SUM(t.capacity), 0) AS capacity_total, COALESCE(SUM(t.booked_count), 0) AS booked_total
        FROM appointment_schedules s JOIN government_offices o ON o.id = s.office_id LEFT JOIN time_slots t ON t.schedule_id = s.id
-      WHERE ${where.join(' AND ')} GROUP BY s.id ORDER BY s.schedule_date, o.name LIMIT 400`, p);
+      WHERE ${where.join(' AND ')} GROUP BY s.id, o.name ORDER BY s.schedule_date, o.name LIMIT 400`, p);
   res.json(rows.map((r) => ({ ...r, is_closed: !!r.is_closed, capacity_total: Number(r.capacity_total), booked_total: Number(r.booked_total) })));
 });
 
