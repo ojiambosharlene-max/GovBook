@@ -77,15 +77,20 @@ export const Alert = ({ type = 'danger', children }) => {
 
 export function Modal({ title, onClose, children, footer, wide }) {
   const ref = useRef(null);
+  const onCloseRef = useRef(onClose);
+
+  // Keep the latest close handler without restarting the modal's focus effect.
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
   useEffect(() => {
     const prev = document.activeElement;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     const first = ref.current && ref.current.querySelector('input, select, textarea, button:not([data-close])');
     if (first) first.focus();
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; if (prev && prev.focus) prev.focus(); };
-  }, [onClose]);
+  }, []);
   return (
     <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
